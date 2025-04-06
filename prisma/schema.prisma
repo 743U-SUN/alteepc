@@ -1,0 +1,155 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// PCパーツの構成を保存するモデル
+model Configuration {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  lastAccess DateTime @default(now())
+  
+  // 選択されたパーツのID
+  cpuId         String?
+  motherboardId String?
+  ramId         String?
+  gpuId         String?
+  caseId        String?
+  powerSupplyId String?
+  coolingId     String?
+  storageIds    String[]
+}
+
+// 将来的な実装のためのモデル
+model CPU {
+  id                String   @id
+  name              String
+  brand             String
+  socket            String
+  cores             Int
+  threads           Int
+  baseClock         Float
+  boostClock        Float
+  tdp               Int
+  supportedMemoryType String[]
+  price             Int
+  imageUrl          String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model Motherboard {
+  id                 String   @id
+  name               String
+  brand              String
+  socket             String
+  chipset            String
+  formFactor         String
+  memorySlots        Int
+  maxMemory          Int
+  supportedMemoryType String[]
+  pciSlots           Json
+  sataConnectors     Int
+  m2Slots            Int
+  price              Int
+  imageUrl           String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model RAM {
+  id        String   @id
+  name      String
+  brand     String
+  type      String
+  capacity  Int
+  speed     Int
+  modules   Int
+  price     Int
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GPU {
+  id          String   @id
+  name        String
+  brand       String
+  chipset     String
+  vram        Int
+  coreClock   Int
+  boostClock  Int
+  length      Int
+  tdp         Int
+  price       Int
+  imageUrl    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Case {
+  id                    String   @id
+  name                  String
+  brand                 String
+  type                  String
+  supportedMotherboards String[]
+  maxGPULength          Int
+  maxCoolerHeight       Int
+  maxPSULength          Int
+  supportedRadiatorSizes String[]
+  price                 Int
+  imageUrl              String
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model PowerSupply {
+  id        String   @id
+  name      String
+  brand     String
+  wattage   Int
+  efficiency String
+  modular   String
+  length    Int
+  price     Int
+  imageUrl  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Cooling {
+  id           String   @id
+  name         String
+  brand        String
+  type         String
+  radiatorSize String?
+  height       Int?
+  tdp          Int
+  price        Int
+  imageUrl     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Storage {
+  id         String   @id
+  name       String
+  brand      String
+  type       String
+  capacity   Int
+  readSpeed  Int
+  writeSpeed Int
+  interface  String
+  price      Int
+  imageUrl   String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}

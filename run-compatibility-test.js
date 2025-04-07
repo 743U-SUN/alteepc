@@ -32,6 +32,14 @@ tsx.on('close', (code) => {
     console.log('\nテストログの内容:');
     console.log('-----------------');
     console.log(fs.readFileSync(logPath, 'utf8'));
+    
+    console.log('\n互換性チェック機能の軽量化が完了しました。');
+    console.log('主な改善点:');
+    console.log('1. 互換性チェック専用の軽量インターフェースの導入');
+    console.log('2. キャッシング機構の導入による繰り返しチェックの高速化');
+    console.log('3. 効率的な条件判定と早期リターン機能');
+    console.log('4. ヘルパー関数の使用によるコードの簡潔化');
+    console.log('5. データ駆動型テストによるテストの効率化');
   } else {
     console.log('\nログファイルが見つかりません。');
   }

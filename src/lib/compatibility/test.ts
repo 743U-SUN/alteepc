@@ -1,6 +1,6 @@
 import { cpus, motherboards } from '../data';
-import { checkCpuMotherboardCompatibility } from './index';
-import { CompatibilityIssue } from './index';
+import { cachedCheckCpuMotherboardCompatibility as checkCpuMotherboardCompatibility } from './index';
+import { CompatibilityIssue } from './types';
 import fs from 'fs';
 import path from 'path';
 
@@ -13,6 +13,9 @@ if (!fs.existsSync(logsDir)) {
   fs.mkdirSync(logsDir, { recursive: true });
 }
 
+// ログファイルの準備 (前回のログをクリア)
+fs.writeFileSync(logFilePath, '');
+
 // ログファイルへの書き込み関数
 function writeLog(message: string) {
   const timestamp = new Date().toISOString();
@@ -22,7 +25,7 @@ function writeLog(message: string) {
 }
 
 // テスト開始
-writeLog('互換性チェックテスト開始');
+writeLog('互換性チェックテスト開始 (軽量インターフェース版)');
 
 // CPUとマザーボードのペアをテストする関数
 function testCpuMotherboardCompatibility(cpuId: string, motherboardId: string) {
@@ -36,7 +39,14 @@ function testCpuMotherboardCompatibility(cpuId: string, motherboardId: string) {
   
   writeLog(`テスト: CPU "${cpu.manufacturer} ${cpu.model}" と マザーボード "${motherboard.manufacturer} ${motherboard.model}"`);
   
+  // 計測開始
+  const startTime = performance.now();
   const issues = checkCpuMotherboardCompatibility(cpuId, motherboardId);
+  const endTime = performance.now();
+  
+  // パフォーマンス結果
+  const executionTime = (endTime - startTime).toFixed(2);
+  writeLog(`  実行時間: ${executionTime}ms`);
   
   if (issues.length === 0) {
     writeLog('  結果: 互換性の問題はありません');
@@ -47,58 +57,95 @@ function testCpuMotherboardCompatibility(cpuId: string, motherboardId: string) {
     });
   }
   writeLog('');
-}
-
-// テストケース1: 同じソケットのCPUとマザーボード (互換性あり)
-// Intel LGA1700 CPUとLGA1700マザーボード
-const intelCpu = cpus.find(c => c.socket === 'LGA1700');
-const intelMotherboard = motherboards.find(m => m.socket === 'LGA1700');
-
-if (intelCpu && intelMotherboard) {
-  testCpuMotherboardCompatibility(intelCpu.id, intelMotherboard.id);
-}
-
-// テストケース2: 異なるソケットのCPUとマザーボード (互換性なし)
-// Intel CPUとAMDマザーボード
-const intelCpu2 = cpus.find(c => c.manufacturer === 'Intel');
-const amdMotherboard = motherboards.find(m => m.socket.includes('AM'));
-
-if (intelCpu2 && amdMotherboard) {
-  testCpuMotherboardCompatibility(intelCpu2.id, amdMotherboard.id);
-}
-
-// テストケース3: メモリタイプの互換性問題
-// DDR5のみのCPUとDDR4のみのマザーボード
-const ddr5Cpu = cpus.find(c => c.supportedMemoryType.includes('DDR5') && !c.supportedMemoryType.includes('DDR4'));
-const ddr4Motherboard = motherboards.find(m => m.memoryType.includes('DDR4') && !m.memoryType.includes('DDR5'));
-
-if (ddr5Cpu && ddr4Motherboard) {
-  testCpuMotherboardCompatibility(ddr5Cpu.id, ddr4Motherboard.id);
-} else {
-  // このケースに合致するデータがない場合は手動でテスト
-  writeLog('メモリタイプ互換性テスト: 適切なテストデータが見つかりませんでした');
   
-  // 第1世代Ryzen (AM4, DDR4)をテスト
-  const amdCpu = cpus.find(c => c.socket === 'AM4');
-  const am5Motherboard = motherboards.find(m => m.socket === 'AM5');
-  
-  if (amdCpu && am5Motherboard) {
-    testCpuMotherboardCompatibility(amdCpu.id, am5Motherboard.id);
+  return { issues, executionTime };
+}
+
+// テストケースの定義
+interface TestCase {
+  name: string;
+  findCpu: (cpus: any[]) => any;
+  findMotherboard: (motherboards: any[]) => any;
+  expectCompatible: boolean;
+}
+
+// テストケース定義
+const testCases: TestCase[] = [
+  {
+    name: '同じソケットのCPUとマザーボード (互換性あり)',
+    findCpu: (cpus) => cpus.find(c => c.socket === 'LGA1700'),
+    findMotherboard: (motherboards) => motherboards.find(m => m.socket === 'LGA1700'),
+    expectCompatible: true
+  },
+  {
+    name: '異なるソケットのCPUとマザーボード (互換性なし)',
+    findCpu: (cpus) => cpus.find(c => c.manufacturer === 'Intel'),
+    findMotherboard: (motherboards) => motherboards.find(m => m.socket.includes('AM')),
+    expectCompatible: false
+  },
+  {
+    name: 'メモリタイプの互換性問題 (DDR5 CPU with DDR4 マザーボード)',
+    findCpu: (cpus) => cpus.find(c => c.supportedMemoryType.includes('DDR5') && !c.supportedMemoryType.includes('DDR4')),
+    findMotherboard: (motherboards) => motherboards.find(m => m.memoryType.includes('DDR4') && !m.memoryType.includes('DDR5')),
+    expectCompatible: false
+  },
+  {
+    name: 'メモリ速度の制限 (低速CPU, 高速マザーボード)',
+    findCpu: (cpus) => cpus.reduce((prev, current) => 
+      (prev.maxMemorySpeed < current.maxMemorySpeed) ? prev : current),
+    findMotherboard: (motherboards) => motherboards.reduce((prev, current) => 
+      (prev.maxMemorySpeed > current.maxMemorySpeed) ? prev : current),
+    expectCompatible: true  // 警告はあるが互換性はある
+  },
+  {
+    name: '高TDPのCPUと下位チップセットマザーボード (情報提供)',
+    findCpu: (cpus) => cpus.find(c => c.tdp > 125),
+    findMotherboard: (motherboards) => motherboards.find(m => m.chipset.includes('H6')),
+    expectCompatible: true  // 情報レベルの警告のみ
   }
-}
+];
 
-// テストケース4: メモリ速度の制限
-// より低いメモリ速度のCPUと高いメモリ速度のマザーボード
-const lowMemSpeedCpu = cpus.reduce((prev, current) => 
-  (prev.maxMemorySpeed < current.maxMemorySpeed) ? prev : current
-);
+// 全テストケースを実行
+testCases.forEach(testCase => {
+  writeLog(`テストケース: ${testCase.name}`);
+  
+  const cpu = testCase.findCpu(cpus);
+  const motherboard = testCase.findMotherboard(motherboards);
+  
+  if (!cpu || !motherboard) {
+    writeLog('  スキップ: 適切なテストデータが見つかりませんでした');
+    return;
+  }
+  
+  const result = testCpuMotherboardCompatibility(cpu.id, motherboard.id);
+  
+  // 互換性の期待結果と実際の結果を比較
+  const hasIssues = result.issues.some(issue => issue.severity === 'critical');
+  const isCompatible = !hasIssues;
+  
+  if (isCompatible === testCase.expectCompatible) {
+    writeLog('  ✅ テスト成功: 期待通りの結果');
+  } else {
+    writeLog('  ❌ テスト失敗: 期待と異なる結果');
+  }
+  writeLog('');
+});
 
-const highMemSpeedMotherboard = motherboards.reduce((prev, current) => 
-  (prev.maxMemorySpeed > current.maxMemorySpeed) ? prev : current
-);
-
-if (lowMemSpeedCpu && highMemSpeedMotherboard) {
-  testCpuMotherboardCompatibility(lowMemSpeedCpu.id, highMemSpeedMotherboard.id);
+// キャッシング機能のテスト
+writeLog('キャッシング機能のテスト');
+if (cpus.length > 0 && motherboards.length > 0) {
+  const cpu = cpus[0];
+  const motherboard = motherboards[0];
+  
+  writeLog('1回目の呼び出し:');
+  const firstResult = testCpuMotherboardCompatibility(cpu.id, motherboard.id);
+  
+  writeLog('2回目の呼び出し (キャッシュから取得されるはず):');
+  const secondResult = testCpuMotherboardCompatibility(cpu.id, motherboard.id);
+  
+  // キャッシングの効果を検証
+  const speedup = parseFloat(firstResult.executionTime) / parseFloat(secondResult.executionTime);
+  writeLog(`キャッシングによる高速化: ${speedup.toFixed(2)}倍`);
 }
 
 writeLog('互換性チェックテスト終了');

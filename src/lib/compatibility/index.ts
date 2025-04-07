@@ -1,44 +1,31 @@
-// 互換性チェックの型定義と基本関数
+// 互換性チェックのメインエントリーポイント
 import { cpus, motherboards } from '../data';
 import { checkCpuMotherboardCompatibility as checkCpuMoboCompat } from './cpu-motherboard';
-import { CPU } from '../data/cpus';
-import { Motherboard } from '../data/motherboards';
+import { 
+  BuildComponents, 
+  CompatibilityIssue,
+  toCompatibilityCPU, 
+  toCompatibilityMotherboard
+} from './types';
 
-// 互換性の問題の重要度
-export type CompatibilitySeverity = 'critical' | 'warning' | 'info';
+// キャッシング機構
+const compatibilityCache = new Map<string, CompatibilityIssue[]>();
 
-// 互換性の問題
-export interface CompatibilityIssue {
-  type: string;          // 問題の種類（識別子）
-  severity: CompatibilitySeverity; // 深刻度
-  message: string;       // 表示メッセージ
-  components: string[];  // 関連コンポーネント
-}
-
-// PC構成のコンポーネントIDs
-export interface BuildComponents {
-  cpu: string | null;
-  motherboard: string | null;
-  memory: string[] | null;
-  gpu: string | null;
-  storage: string[] | null;
-  psu: string | null;
-  case: string | null;
-  cpuCooler: string | null;
-  fans: string[] | null;
+function getCacheKey(cpuId: string, motherboardId: string): string {
+  return `${cpuId}:${motherboardId}`;
 }
 
 /**
  * IDからCPUオブジェクトを取得する関数
  */
-function getCpuById(id: string): CPU | null {
+function getCpuById(id: string) {
   return cpus.find(cpu => cpu.id === id) || null;
 }
 
 /**
  * IDからマザーボードオブジェクトを取得する関数
  */
-function getMotherboardById(id: string): Motherboard | null {
+function getMotherboardById(id: string) {
   return motherboards.find(mobo => mobo.id === id) || null;
 }
 
@@ -53,13 +40,11 @@ export function checkBuildCompatibility(components: BuildComponents): Compatibil
   
   // CPUとマザーボードの互換性チェック
   if (components.cpu && components.motherboard) {
-    const cpu = getCpuById(components.cpu);
-    const motherboard = getMotherboardById(components.motherboard);
-    
-    if (cpu && motherboard) {
-      const cpuMotherboardIssues = checkCpuMoboCompat(cpu, motherboard);
-      issues.push(...cpuMotherboardIssues);
-    }
+    const cpuMotherboardIssues = cachedCheckCpuMotherboardCompatibility(
+      components.cpu, 
+      components.motherboard
+    );
+    issues.push(...cpuMotherboardIssues);
   }
   
   // 将来的に他のパーツの互換性チェックも追加予定
@@ -69,12 +54,41 @@ export function checkBuildCompatibility(components: BuildComponents): Compatibil
 
 /**
  * CPUとマザーボードの互換性をIDを指定してチェックする関数
+ * キャッシング機能付き
  * 
  * @param cpuId CPUのID
  * @param motherboardId マザーボードのID
  * @returns 互換性の問題点がある場合は問題点の配列、問題がなければ空配列
  */
-export function checkCpuMotherboardCompatibility(cpuId: string, motherboardId: string): CompatibilityIssue[] {
+export function cachedCheckCpuMotherboardCompatibility(
+  cpuId: string, 
+  motherboardId: string
+): CompatibilityIssue[] {
+  const cacheKey = getCacheKey(cpuId, motherboardId);
+  
+  // キャッシュにあればそれを返す
+  if (compatibilityCache.has(cacheKey)) {
+    return compatibilityCache.get(cacheKey)!;
+  }
+  
+  const result = checkCpuMotherboardCompatibility(cpuId, motherboardId);
+  compatibilityCache.set(cacheKey, result);
+  return result;
+}
+
+/**
+ * CPUとマザーボードの互換性をIDを指定してチェックする関数（キャッシュなし）
+ * 
+ * @param cpuId CPUのID
+ * @param motherboardId マザーボードのID
+ * @param options オプション設定 (earlyReturn: 重大な問題があれば処理を終了)
+ * @returns 互換性の問題点がある場合は問題点の配列、問題がなければ空配列
+ */
+export function checkCpuMotherboardCompatibility(
+  cpuId: string, 
+  motherboardId: string,
+  options = { earlyReturn: false }
+): CompatibilityIssue[] {
   const cpu = getCpuById(cpuId);
   const motherboard = getMotherboardById(motherboardId);
   
@@ -87,10 +101,20 @@ export function checkCpuMotherboardCompatibility(cpuId: string, motherboardId: s
     }];
   }
   
-  return checkCpuMoboCompat(cpu, motherboard);
+  // 完全なオブジェクトから互換性チェック用の軽量オブジェクトに変換
+  const compatibilityCpu = toCompatibilityCPU(cpu);
+  const compatibilityMotherboard = toCompatibilityMotherboard(motherboard);
+  
+  // 軽量オブジェクトで互換性チェックを実行
+  return checkCpuMoboCompat(compatibilityCpu, compatibilityMotherboard, options);
 }
 
-// 他の互換性チェック関数（将来的に実装予定）
+// 型エクスポート
+export type { CompatibilityIssue } from './types';
+export type { CompatibilitySeverity } from './types';
+export type { BuildComponents } from './types';
+
+// 将来追加予定の互換性チェック関数のプレースホルダー
 export function checkMemoryCompatibility(memoryIds: string[], motherboardId: string): CompatibilityIssue[] {
   return [];
 }

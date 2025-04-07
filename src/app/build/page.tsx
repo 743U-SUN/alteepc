@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useBuild } from '@/context/build-context';
 import BuildSummary from '@/components/parts/build-summary';
 import Button from '@/components/ui/button';
@@ -80,7 +81,7 @@ export default function BuildPage() {
                     </div>
                     <div className="mt-2 flex justify-end">
                       <Button variant="primary" size="sm">
-                        <a href="/parts/cpu" className="text-white">変更</a>
+                        <Link href="/parts/cpu" className="text-white">変更</Link>
                       </Button>
                     </div>
                   </div>
@@ -88,7 +89,7 @@ export default function BuildPage() {
                   <div>
                     <p className="text-sm text-gray-500 mb-2">プロセッサを選択してください</p>
                     <Button variant="primary" size="sm">
-                      <a href="/parts/cpu" className="text-white">選択</a>
+                      <Link href="/parts/cpu" className="text-white">選択</Link>
                     </Button>
                   </div>
                 )}
@@ -109,7 +110,7 @@ export default function BuildPage() {
                     </div>
                     <div className="mt-2 flex justify-end">
                       <Button variant="primary" size="sm">
-                        <a href="/parts/motherboard" className="text-white">変更</a>
+                        <Link href="/parts/motherboard" className="text-white">変更</Link>
                       </Button>
                     </div>
                   </div>
@@ -117,7 +118,7 @@ export default function BuildPage() {
                   <div>
                     <p className="text-sm text-gray-500 mb-2">マザーボードを選択してください</p>
                     <Button variant="primary" size="sm">
-                      <a href="/parts/motherboard" className="text-white">選択</a>
+                      <Link href="/parts/motherboard" className="text-white">選択</Link>
                     </Button>
                   </div>
                 )}

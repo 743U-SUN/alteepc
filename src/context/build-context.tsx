@@ -76,12 +76,26 @@ export function BuildProvider({ children }: { children: React.ReactNode }) {
 
   // パーツ更新関数
   const updatePart = (partType: keyof BuildComponents, partId: string | null) => {
-    const updatedComponents = { ...currentBuild.components, [partType]: partId };
-    const updatedBuild = { ...currentBuild, components: updatedComponents };
+    // 最新のローカルストレージの値を読み込む
+    const savedBuild = localStorage.getItem(STORAGE_KEY);
+    let currentState = { ...currentBuild };
+    
+    if (savedBuild) {
+      try {
+        currentState = JSON.parse(savedBuild);
+      } catch (error) {
+        console.error('Failed to parse saved build in updatePart:', error);
+      }
+    }
+    
+    // 現在の状態に基づいてパーツを更新
+    const updatedComponents = { ...currentState.components, [partType]: partId };
+    const updatedBuild = { ...currentState, components: updatedComponents };
     
     // TODO: ここで互換性チェックと価格計算を行う
     // 互換性チェックは将来的に実装
 
+    // 状態を更新して保存
     setCurrentBuild(updatedBuild);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedBuild));
   };

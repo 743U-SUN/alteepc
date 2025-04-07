@@ -77,7 +77,22 @@ export default function MotherboardSelectionPage() {
   
   // マザーボード選択時のハンドラー
   const handleSelectMotherboard = (motherboardId: string) => {
+    // マザーボードの更新時にCPUの情報を保持したまま更新する
+    const updatedComponents = {
+      ...currentBuild.components,
+      motherboard: motherboardId
+    };
+    
+    // 新しい構成でローカルストレージを直接更新
+    const updatedBuild = {
+      ...currentBuild,
+      components: updatedComponents
+    };
+    localStorage.setItem('alteepc_current_build', JSON.stringify(updatedBuild));
+    
+    // コンテキストの状態も更新
     updatePart('motherboard', motherboardId);
+    
     router.push('/build');
   };
   

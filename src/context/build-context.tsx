@@ -1,39 +1,70 @@
-'use client';
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { PCBuild } from '@/models/build';
 
-interface BuildContextType {
+// PCビルドコンポーネントの型定義
+type BuildComponents = {
+  cpu: string | null;
+  motherboard: string | null;
+  memory: string[] | null;
+  gpu: string | null;
+  storage: string[] | null;
+  psu: string | null;
+  case: string | null;
+  cpuCooler: string | null;
+  fans: string[] | null;
+};
+
+// 互換性問題の型定義
+type CompatibilityIssue = {
+  type: string;
+  severity: 'critical' | 'warning' | 'info';
+  message: string;
+  components: string[];
+};
+
+// PCビルド全体の型定義
+type PCBuild = {
+  components: BuildComponents;
+  compatibilityIssues: CompatibilityIssue[];
+  totalPrice: number;
+};
+
+// コンテキストの型定義
+type BuildContextType = {
   currentBuild: PCBuild;
-  updateBuild: (newBuild: Partial<PCBuild>) => void;
-  updatePart: (partType: string, partId: string | null) => void;
+  updatePart: (partType: keyof BuildComponents, partId: string | null) => void;
   resetBuild: () => void;
-}
+};
 
-const initialBuild: PCBuild = {
+// ローカルストレージのキー
+const STORAGE_KEY = 'alteepc_current_build';
+
+// デフォルトの空のビルド状態
+const defaultBuild: PCBuild = {
   components: {
     cpu: null,
     motherboard: null,
-    memory: [],
+    memory: null,
     gpu: null,
-    storage: [],
+    storage: null,
     psu: null,
     case: null,
     cpuCooler: null,
-    fans: []
+    fans: null,
   },
   compatibilityIssues: [],
-  totalPrice: 0
+  totalPrice: 0,
 };
 
-const BuildContext = createContext<BuildContextType | undefined>(undefined);
+// コンテキストの作成
+const BuildContext = createContext<BuildContextType | null>(null);
 
+// コンテキストプロバイダーコンポーネント
 export function BuildProvider({ children }: { children: React.ReactNode }) {
-  const [currentBuild, setCurrentBuild] = useState<PCBuild>(initialBuild);
-  
-  // ブラウザでのみ実行されるようにする
+  const [currentBuild, setCurrentBuild] = useState<PCBuild>(defaultBuild);
+
+  // 初期ロード時にローカルストレージから状態を読み込む
   useEffect(() => {
-    const savedBuild = localStorage.getItem('alteepc_current_build');
+    const savedBuild = localStorage.getItem(STORAGE_KEY);
     if (savedBuild) {
       try {
         setCurrentBuild(JSON.parse(savedBuild));
@@ -42,71 +73,37 @@ export function BuildProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, []);
-  
-  const updateBuild = (newBuild: Partial<PCBuild>) => {
-    const updatedBuild = { ...currentBuild, ...newBuild };
+
+  // パーツ更新関数
+  const updatePart = (partType: keyof BuildComponents, partId: string | null) => {
+    const updatedComponents = { ...currentBuild.components, [partType]: partId };
+    const updatedBuild = { ...currentBuild, components: updatedComponents };
+    
+    // TODO: ここで互換性チェックと価格計算を行う
+    // 互換性チェックは将来的に実装
+
     setCurrentBuild(updatedBuild);
-    localStorage.setItem('alteepc_current_build', JSON.stringify(updatedBuild));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedBuild));
   };
-  
-  const updatePart = (partType: string, partId: string | null) => {
-    if (!partType) return;
-    
-    let updatedComponents;
-    
-    // 配列形式のコンポーネントを処理
-    if (['memory', 'storage', 'fans'].includes(partType)) {
-      if (partId === null) {
-        // 全削除の場合
-        updatedComponents = {
-          ...currentBuild.components,
-          [partType]: []
-        };
-      } else {
-        // 配列の場合は追加する
-        const currentArray = currentBuild.components[partType as keyof typeof currentBuild.components] as string[];
-        if (!currentArray.includes(partId)) {
-          updatedComponents = {
-            ...currentBuild.components,
-            [partType]: [...currentArray, partId]
-          };
-        } else {
-          return; // 既に存在する場合は何もしない
-        }
-      }
-    } else {
-      // 単一値のコンポーネントを処理
-      updatedComponents = {
-        ...currentBuild.components,
-        [partType]: partId
-      };
-    }
-    
-    const updatedBuild = {
-      ...currentBuild,
-      components: updatedComponents
-    };
-    
-    setCurrentBuild(updatedBuild);
-    localStorage.setItem('alteepc_current_build', JSON.stringify(updatedBuild));
-  };
-  
+
+  // ビルドリセット関数
   const resetBuild = () => {
-    setCurrentBuild(initialBuild);
-    localStorage.removeItem('alteepc_current_build');
+    setCurrentBuild(defaultBuild);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultBuild));
   };
-  
+
   return (
-    <BuildContext.Provider value={{ currentBuild, updateBuild, updatePart, resetBuild }}>
+    <BuildContext.Provider value={{ currentBuild, updatePart, resetBuild }}>
       {children}
     </BuildContext.Provider>
   );
 }
 
-export function useBuildContext() {
+// カスタムフック
+export function useBuild() {
   const context = useContext(BuildContext);
-  if (context === undefined) {
-    throw new Error('useBuildContext must be used within a BuildProvider');
+  if (!context) {
+    throw new Error('useBuild must be used within a BuildProvider');
   }
   return context;
 }

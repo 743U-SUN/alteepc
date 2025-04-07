@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useBuild } from '@/context/build-context';
 import BuildSummary from '@/components/parts/build-summary';
 import Button from '@/components/ui/button';
@@ -11,7 +12,11 @@ import { motherboards } from '@/lib/data/motherboards';
 
 export default function BuildPage() {
   const { currentBuild, resetBuild } = useBuild();
+  const router = useRouter();
   const [compatibilityIssues, setCompatibilityIssues] = useState<any[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
   
   // CPU とマザーボードの互換性チェック
   useEffect(() => {
@@ -51,6 +56,56 @@ export default function BuildPage() {
     
     setCompatibilityIssues(issues);
   }, [currentBuild.components.cpu, currentBuild.components.motherboard]);
+  
+  // PC構成を保存して共有URLを生成する関数
+  const saveBuild = async () => {
+    try {
+      setIsSaving(true);
+      
+      const response = await fetch('/api/builds', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          components: currentBuild.components,
+          name: 'My PC Build' // オプションでユーザーが名前をつけられるようにできる
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save build');
+      }
+      
+      const data = await response.json();
+      
+      // 共有URLを設定
+      setShareUrl(`${window.location.origin}${data.url}`);
+      setShowShareModal(true);
+    } catch (error) {
+      console.error('Error saving build:', error);
+      alert('構成の保存中にエラーが発生しました。');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  // URLをクリップボードにコピーする関数
+  const [isCopied, setIsCopied] = useState(false);
+  
+  const copyToClipboard = async () => {
+    if (!shareUrl) return;
+    
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setIsCopied(true);
+      // 3秒後に元の状態に戻す
+      setTimeout(() => setIsCopied(false), 3000);
+    } catch (error) {
+      console.error('Failed to copy:', error);
+      alert('URLのコピーに失敗しました。');
+    }
+  };
   
   // パーツのカウント
   const selectedPartsCount = Object.values(currentBuild.components).filter(value => value !== null).length;
@@ -135,18 +190,19 @@ export default function BuildPage() {
             </div>
           )}
           
-          {/* 構成の保存・共有（将来的な実装） */}
+          {/* 構成の保存・共有 */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <h2 className="text-xl font-bold mb-4">構成の保存・共有</h2>
             <p className="text-sm text-gray-500 mb-4">
-              構成を保存して、URLを共有できます（将来的な実装）
+              構成を保存して、URLを共有できます
             </p>
             <Button 
               variant="primary" 
-              disabled={selectedPartsCount < 2}
+              disabled={selectedPartsCount < 2 || isSaving}
               className="w-full"
+              onClick={saveBuild}
             >
-              構成を保存して共有
+              {isSaving ? '保存中...' : '構成を保存して共有'}
             </Button>
             
             <div className="mt-4">
@@ -166,6 +222,52 @@ export default function BuildPage() {
           <BuildSummary />
         </div>
       </div>
+      
+      {/* 共有モーダル */}
+      {showShareModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold mb-4">構成URLが生成されました</h3>
+            <p className="mb-4">以下のURLを使用して、この構成を共有できます：</p>
+            
+            <div className="flex items-center mb-4">
+              <input
+                type="text"
+                readOnly
+                value={shareUrl || ''}
+                className="flex-grow p-2 border rounded-l-md"
+              />
+              <button
+                onClick={copyToClipboard}
+                className={`px-4 py-2 rounded-r-md ${isCopied ? 'bg-green-500' : 'bg-primary'} text-white transition-colors duration-300`}
+                disabled={isCopied}
+              >
+                {isCopied ? 'コピーしました' : 'コピー'}
+              </button>
+            </div>
+            
+            <div className="flex justify-between mt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  if (shareUrl) {
+                    // URLから/build/以降を取得
+                    const buildId = shareUrl.split('/build/')[1];
+                    if (buildId) {
+                      router.push(`/build/${buildId}`);
+                    }
+                  }
+                }}
+              >
+                この構成を表示
+              </Button>
+              <Button variant="primary" onClick={() => setShowShareModal(false)}>
+                閉じる
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

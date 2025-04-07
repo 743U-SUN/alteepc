@@ -1,6 +1,7 @@
 import { createId } from '@paralleldrive/cuid2';
 import { PartsService } from './parts-service';
 import type { CompatibilityIssue } from '../lib/compatibility';
+import { generateBuildId } from '@/lib/url/build-url';
 
 // PC構成の型定義
 export interface PCBuildComponents {
@@ -27,12 +28,25 @@ export interface PCBuild {
   accessCount: number;
 }
 
+// シングルトンパターンでBuildServiceを実装
+// これにより、サーバー起動中はメモリ内にビルドデータが保持される
+let instance: BuildService | null = null;
+
 export class BuildService {
   private builds: PCBuild[] = [];
   private partsService: PartsService;
   
   constructor() {
+    // シングルトンインスタンスの確認
+    if (instance) {
+      return instance;
+    }
+    
     this.partsService = new PartsService();
+    instance = this;
+    
+    // アプリケーション起動時にログを出力
+    console.log('[BuildService] Initialized');
   }
   
   // PC構成の保存
@@ -45,7 +59,8 @@ export class BuildService {
     createdAt: Date;
     expiresAt: Date;
   }> {
-    const buildId = createId();
+    // 新しいbuildIdを生成
+    const buildId = generateBuildId();
     const now = new Date();
     const expiresAt = new Date(now);
     expiresAt.setDate(expiresAt.getDate() + 90); // 90日後の有効期限
@@ -72,6 +87,8 @@ export class BuildService {
     // メモリ上に保存（将来的にデータベースに保存）
     this.builds.push(newBuild);
     
+    console.log(`[BuildService] Saved build with ID: ${buildId}`);
+    
     return {
       id: buildId,
       url: `/build/${buildId}`,
@@ -82,15 +99,20 @@ export class BuildService {
   
   // PC構成の取得
   async getBuild(buildId: string): Promise<PCBuild | null> {
+    console.log(`[BuildService] Getting build with ID: ${buildId}`);
+    console.log(`[BuildService] Available builds: ${this.builds.length}`);
+    
     const build = this.builds.find(b => b.id === buildId);
     
     if (!build) {
+      console.log(`[BuildService] Build not found: ${buildId}`);
       return null;
     }
     
     // アクセス回数と最終アクセス日時の更新
     build.accessCount += 1;
     build.lastAccessedAt = new Date();
+    console.log(`[BuildService] Build found, access count: ${build.accessCount}`);
     
     return build;
   }
@@ -107,7 +129,10 @@ export class BuildService {
     
     this.builds = this.builds.filter(build => build.expiresAt > now);
     
-    return initialCount - this.builds.length;
+    const removedCount = initialCount - this.builds.length;
+    console.log(`[BuildService] Cleaned up ${removedCount} expired builds`);
+    
+    return removedCount;
   }
   
   // 合計価格の計算

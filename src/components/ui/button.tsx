@@ -2,7 +2,7 @@ import React from 'react';
 
 type ButtonProps = {
   children: React.ReactNode;
-  variant?: 'primary' | 'secondary' | 'accent' | 'outline';
+  variant?: 'primary' | 'secondary' | 'accent' | 'outline' | 'success';
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   disabled?: boolean;
@@ -24,6 +24,7 @@ export default function Button({
     secondary: 'bg-secondary text-white hover:bg-green-600',
     accent: 'bg-accent text-white hover:bg-yellow-600',
     outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50',
+    success: 'bg-green-500 text-white hover:bg-green-600',
   };
 
   const sizeClasses = {

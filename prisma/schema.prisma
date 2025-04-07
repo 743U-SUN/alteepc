@@ -10,4 +10,210 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 将来的にデータベースを実装する際にスキーマを追加予定
+// CPU モデル
+model CPU {
+  id                  String         @id @default(cuid())
+  manufacturer        String         // Intel, AMD など
+  model               String         // Core i7-13700K など
+  socket              String         // LGA1700, AM5 など
+  cores               Int            // コア数
+  threads             Int            // スレッド数
+  baseClock           Float          // ベースクロック (GHz)
+  boostClock          Float          // ブーストクロック (GHz)
+  tdp                 Int            // 熱設計電力 (W)
+  supportedMemoryType String[]       // "DDR4", "DDR5" など
+  maxMemorySpeed      Int            // 最大メモリ速度 (MHz)
+  integratedGraphics  String?        // 内蔵グラフィックスの名称（ない場合はnull）
+  
+  // メディア情報
+  imageUrl            String?        // 製品画像URL
+  description         String?        // 製品説明
+  releaseDate         DateTime?      // 発売日
+  price               Int            // 定価（基準価格）
+  
+  // メタデータ
+  recommendationScore Int            @default(0)  // おすすめ度（0-100）
+  
+  // リレーション
+  currentPrices       CurrentPrice[]
+  priceHistories      PriceHistory[]
+  builds              PCBuild[]
+  
+  // タイムスタンプ
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  
+  // インデックス
+  @@index([manufacturer])
+  @@index([socket])
+  @@index([recommendationScore])
+  @@index([price])
+}
+
+// マザーボードモデル
+model Motherboard {
+  id                String          @id @default(cuid())
+  manufacturer      String          // ASUS, MSI など
+  model             String          // ROG STRIX Z790-E など
+  socket            String          // LGA1700, AM5 など
+  chipset           String          // Z790, X670 など
+  formFactor        String          // ATX, Micro-ATX, Mini-ITX など
+  memoryType        String[]        // ["DDR4", "DDR5"] など
+  memorySlots       Int             // メモリスロット数
+  maxMemorySpeed    Int             // 最大メモリ速度 (MHz)
+  maxMemory         Int             // 最大メモリ容量 (GB)
+  
+  // PCI関連
+  pcie_x16          Int             // PCIe x16スロット数
+  pcie_x8           Int             // PCIe x8スロット数
+  pcie_x4           Int             // PCIe x4スロット数
+  pcie_x1           Int             // PCIe x1スロット数
+  
+  // その他接続関連
+  sataConnectors    Int             // SATAコネクタ数
+  m2Slots           Int             // M.2スロット数
+  usb2              Int             // USB 2.0ポート数
+  usb3              Int             // USB 3.0/3.1/3.2ポート数
+  typeC             Int             // USB Type-Cポート数
+  wirelessNetworking String[]       // ["WiFi 6E", "Bluetooth 5.2"] など
+  
+  // メディア・価格情報
+  imageUrl          String?         // 製品画像URL
+  description       String?         // 製品説明
+  releaseDate       DateTime?       // 発売日
+  price             Int             // 定価（基準価格）
+  
+  // メタデータとリレーション
+  recommendationScore Int           @default(0)  // おすすめ度（0-100）
+  currentPrices     CurrentPrice[]
+  priceHistories    PriceHistory[]
+  builds            PCBuild[]
+  
+  // タイムスタンプ
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  
+  // インデックス
+  @@index([manufacturer])
+  @@index([socket])
+  @@index([chipset])
+  @@index([formFactor])
+  @@index([recommendationScore])
+  @@index([price])
+}
+
+// ショップモデル
+model Shop {
+  id                  String         @id @default(cuid())
+  name                String         // "Amazon", "楽天", "Yahoo ショッピング" など
+  url                 String         // ショップのベースURL
+  logo                String?        // ショップロゴのURL
+  currentPrices       CurrentPrice[]
+  priceHistories      PriceHistory[]
+  isActive            Boolean        @default(true) // ショップが現在アクティブかどうか
+  priority            Int            @default(0)    // 表示優先度（高いほど優先）
+  
+  // タイムスタンプ
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  
+  // インデックス
+  @@index([name])
+  @@index([isActive, priority])
+}
+
+// 現在の最新価格モデル
+model CurrentPrice {
+  id                  String         @id @default(cuid())
+  amount              Int            // 価格（円）
+  url                 String         // 製品ページの直接リンク
+  inStock             Boolean        @default(false) // 在庫状況
+  shippingCost        Int?           // 送料（円）
+  lastChecked         DateTime       // 最後に価格をチェックした日時
+  
+  // リレーション
+  cpu                 CPU?           @relation(fields: [cpuId], references: [id], onDelete: SetNull)
+  cpuId               String?
+  motherboard         Motherboard?   @relation(fields: [motherboardId], references: [id], onDelete: SetNull)
+  motherboardId       String?
+  shop                Shop           @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shopId              String
+  
+  // タイムスタンプ・インデックス
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  
+  // インデックスと制約
+  @@index([cpuId])
+  @@index([motherboardId])
+  @@index([shopId])
+  @@index([amount])
+  @@index([inStock])
+  @@index([lastChecked])
+  @@index([cpuId, shopId])
+  @@index([motherboardId, shopId])
+  @@index([inStock, amount]) // 在庫あり商品の価格検索用
+  
+  // 同じパーツ×ショップの組み合わせでは1レコードのみ許可
+  @@unique([cpuId, shopId], name: "unique_cpu_shop", map: "current_price_cpu_shop_unique")
+  @@unique([motherboardId, shopId], name: "unique_motherboard_shop", map: "current_price_motherboard_shop_unique")
+
+  // 各レコードでCPUかマザーボードのどちらか一方のみを参照するよう制約
+  @@check(((cpuId IS NOT NULL) AND (motherboardId IS NULL)) OR ((cpuId IS NULL) AND (motherboardId IS NOT NULL)))
+}
+
+// 価格履歴モデル
+model PriceHistory {
+  id                  String         @id @default(cuid())
+  amount              Int            // 記録時の価格（円）
+  inStock             Boolean        // 記録時の在庫状況
+  shippingCost        Int?           // 記録時の送料（円）
+  recordedAt          DateTime       // 価格が記録された日時
+  
+  // リレーション
+  cpu                 CPU?           @relation(fields: [cpuId], references: [id], onDelete: SetNull)
+  cpuId               String?
+  motherboard         Motherboard?   @relation(fields: [motherboardId], references: [id], onDelete: SetNull)
+  motherboardId       String?
+  shop                Shop           @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  shopId              String
+  
+  // タイムスタンプ・インデックス
+  createdAt           DateTime       @default(now())
+  
+  // インデックス
+  @@index([cpuId, recordedAt])
+  @@index([motherboardId, recordedAt])
+  @@index([shopId, recordedAt])
+  @@index([recordedAt])
+  @@index([cpuId, shopId, recordedAt])
+  @@index([motherboardId, shopId, recordedAt])
+  
+  // 各レコードでCPUかマザーボードのどちらか一方のみを参照するよう制約
+  @@check(((cpuId IS NOT NULL) AND (motherboardId IS NULL)) OR ((cpuId IS NULL) AND (motherboardId IS NOT NULL)))
+}
+
+// PC構成モデル
+model PCBuild {
+  id              String       @id @default(cuid())
+  name            String?      // ユーザー指定の構成名
+  totalPrice      Int          // 合計価格
+  accessCount     Int          @default(0)
+  compatibilityIssues Json?    // 互換性問題をJSON形式で保存
+  
+  // コンポーネントリレーション
+  cpu             CPU?         @relation(fields: [cpuId], references: [id], onDelete: SetNull)
+  cpuId           String?
+  motherboard     Motherboard? @relation(fields: [motherboardId], references: [id], onDelete: SetNull)
+  motherboardId   String?
+  
+  // 日時関連
+  createdAt       DateTime     @default(now())
+  lastAccessedAt  DateTime     @default(now())
+  expiresAt       DateTime     // 有効期限
+  
+  // インデックス
+  @@index([createdAt])
+  @@index([lastAccessedAt])
+  @@index([expiresAt])
+}

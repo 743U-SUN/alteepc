@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { cpus } from '@/lib/data/cpus';
+import { motherboards } from '@/lib/data/motherboards';
 import { useBuild } from '@/context/build-context';
 import PartList from '@/components/parts/part-list';
 import FilterSection from '@/components/parts/filter-section';
@@ -21,6 +22,23 @@ export default function CPUSelectionPage() {
   
   // フィルタリングされたCPUリスト
   const [filteredCPUs, setFilteredCPUs] = useState(cpus);
+  
+  // 選択されているマザーボードに基づいて自動フィルタリング
+  useEffect(() => {
+    if (currentBuild.components.motherboard) {
+      const selectedMotherboard = motherboards.find(mb => mb.id === currentBuild.components.motherboard);
+      if (selectedMotherboard) {
+        setSocket(selectedMotherboard.socket);
+
+        // マザーボードのソケットがIntelなのかAMDなのかを判定してメーカーフィルターも設定
+        if (selectedMotherboard.socket.includes('LGA')) {
+          setManufacturer('Intel');
+        } else if (selectedMotherboard.socket.includes('AM')) {
+          setManufacturer('AMD');
+        }
+      }
+    }
+  }, [currentBuild.components.motherboard]);
   
   // ソート・フィルター適用
   useEffect(() => {
@@ -57,7 +75,22 @@ export default function CPUSelectionPage() {
   
   // CPU選択時のハンドラー
   const handleSelectCPU = (cpuId: string) => {
+    // CPUの更新時にマザーボードの情報を保持したまま更新する
+    const updatedComponents = {
+      ...currentBuild.components,
+      cpu: cpuId
+    };
+    
+    // 新しい構成でローカルストレージを直接更新
+    const updatedBuild = {
+      ...currentBuild,
+      components: updatedComponents
+    };
+    localStorage.setItem('alteepc_current_build', JSON.stringify(updatedBuild));
+    
+    // コンテキストの状態も更新
     updatePart('cpu', cpuId);
+    
     router.push('/build');
   };
   
@@ -84,6 +117,24 @@ export default function CPUSelectionPage() {
           ← PC構成に戻る
         </Link>
         <h1 className="text-3xl font-bold mt-2 mb-6">CPU選択</h1>
+        
+        {/* 選択中のマザーボードに関するヒント表示 */}
+        {currentBuild.components.motherboard && (
+          <div className="bg-blue-50 border-l-4 border-primary p-4 mb-6">
+            <p className="text-sm text-gray-700">
+              <span className="font-semibold">マザーボード選択済み:</span> {
+                motherboards.find(mb => mb.id === currentBuild.components.motherboard)?.manufacturer
+              } {
+                motherboards.find(mb => mb.id === currentBuild.components.motherboard)?.model
+              }（{
+                motherboards.find(mb => mb.id === currentBuild.components.motherboard)?.socket
+              }）
+            </p>
+            <p className="text-xs text-gray-500 mt-1">
+              現在のマザーボードに基づいてソケットフィルターが適用されています。
+            </p>
+          </div>
+        )}
         
         <div className="flex flex-col md:flex-row gap-8">
           {/* フィルターセクション */}

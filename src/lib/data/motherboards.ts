@@ -31,7 +31,7 @@ export interface Motherboard {
 // マザーボードダミーデータ
 export const motherboards: Motherboard[] = [
   {
-    id: createId(),
+    id: 'clq1g5gxi000208jt5r6rhzzz',  // データベースと一致させた固定ID
     manufacturer: 'ASUS',
     model: 'ROG STRIX Z790-E GAMING WIFI II',
     socket: 'LGA1700',
@@ -135,28 +135,28 @@ export const motherboards: Motherboard[] = [
     updatedAt: new Date(),
   },
   {
-    id: createId(),
-    manufacturer: 'ASUS',
-    model: 'ROG STRIX X670E-E GAMING WIFI',
+    id: 'clq1g5gxi000308jt7r8rhaaa',  // データベースと一致させた固定ID
+    manufacturer: 'MSI',
+    model: 'MPG X670E CARBON WIFI',
     socket: 'AM5',
     chipset: 'X670E',
     formFactor: 'ATX',
     memoryType: ['DDR5'],
     memorySlots: 4,
-    maxMemorySpeed: 6400,
-    maxMemory: 192,
+    maxMemorySpeed: 6600,
+    maxMemory: 128,
     pciSlots: {
-      pcie5: 2,
-      pcie4: 1,
+      pcie5: 1,
+      pcie4: 2,
       pcie3: 0
     },
-    sataConnectors: 4,
-    m2Slots: 5,
-    price: 59800,
-    releaseDate: '2022-09-27',
-    url: 'https://example.com/products/asus-rog-strix-x670e-e-gaming-wifi',
-    imageUrl: '/images/parts/motherboard/asus_rog_strix_x670e_e_gaming_wifi.jpg',
-    recommendationScore: 87,
+    sataConnectors: 6,
+    m2Slots: 4,
+    price: 54980,
+    releaseDate: '2022-08-30',
+    url: 'https://example.com/products/msi-mpg-x670e-carbon-wifi',
+    imageUrl: '/images/parts/motherboard/msi_mpg_x670e_carbon_wifi.jpg',
+    recommendationScore: 85,
     createdAt: new Date(),
     updatedAt: new Date(),
   },

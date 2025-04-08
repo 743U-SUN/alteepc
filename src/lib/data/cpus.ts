@@ -47,7 +47,7 @@ export const cpus: CPU[] = [
     updatedAt: new Date(),
   },
   {
-    id: createId(),
+    id: 'clq1g5gxi000008jt0r2rhxxx',  // データベースと一致させた固定ID
     manufacturer: 'Intel',
     model: 'Core i7-14700K',
     socket: 'LGA1700',
@@ -131,7 +131,7 @@ export const cpus: CPU[] = [
     updatedAt: new Date(),
   },
   {
-    id: createId(),
+    id: 'clq1g5gxi000108jt3r4rhyyy',  // データベースと一致させた固定ID
     manufacturer: 'AMD',
     model: 'Ryzen 7 7800X3D',
     socket: 'AM5',

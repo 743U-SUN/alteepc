@@ -5,6 +5,7 @@ const nextConfig = {
     dir: './logs',
     level: 'info',
   },
+  output: 'standalone',
 };
 
 module.exports = nextConfig;

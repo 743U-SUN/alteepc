@@ -1,0 +1,81 @@
+services:
+  # PostgreSQLデータベース
+  db:
+    image: postgres:16-alpine
+    container_name: alteepc-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-alteepc}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - alteepc-network
+
+  # Next.jsアプリケーション
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: alteepc-app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-alteepc}?schema=public
+      - HOSTNAME=0.0.0.0
+    ports:
+      - "3000:3000"
+    networks:
+      - alteepc-network
+
+  # 開発モード用のNext.jsアプリケーション（オプション）
+  app-dev:
+    image: node:20-alpine
+    container_name: alteepc-dev
+    working_dir: /app
+    # OpenSSLをインストールしてから、アプリを起動
+    command: sh -c "apk add --no-cache openssl && npm ci && npx prisma generate && npm run dev"
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_SITE_URL=http://localhost:3001
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-alteepc}?schema=public
+      - HOSTNAME=0.0.0.0
+    ports:
+      - "3001:3000"
+      - "5555:5555"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - alteepc-network
+    # 開発環境用の設定
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    # 開発環境では使用しない場合はプロファイルで除外
+    profiles:
+      - dev
+
+volumes:
+  postgres-data:
+  node_modules:
+
+networks:
+  alteepc-network:
+    driver: bridge

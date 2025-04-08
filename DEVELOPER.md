@@ -108,6 +108,33 @@ alteepc/
 ## 実装計画
 まずはCPUとマザーボード部分のみ実装->様々な機能を確認する。
 
+## Docker環境の使い方
+
+### 開発環境の起動
+
+```bash
+# 開発環境の起動(データベース含む)
+npm run docker:up:dev
+
+# 開発環境の停止
+npm run docker:down
+```
+
+### Prismaデータベース操作
+
+```bash
+# Prisma Studioを起動 (ポート 5555 でアクセス可能)
+npm run docker:prisma:studio
+
+# データベースマイグレーションの実行
+npm run docker:prisma:migrate
+
+# サンプルデータを投入
+npm run docker:prisma:seed
+```
+
+注意：開発環境コンテナ内でPrisma操作を実行するため、まず開発環境を起動してください。
+
 ### フェーズ1: 基本機能実装（推定期間: 2週間）
 
 1. プロジェクト初期セットアップ
@@ -136,6 +163,7 @@ alteepc/
 2. 実データベースへの移行
    - Prismaの初期セットアップ
    - CPU / マザーボードのデータモデル定義とマイグレーション
+   - Dockerへの移行とPostgreSQL
    - 実データの投入（自動化されたシード処理）
    - サービス層をダミーデータからデータベースへ切り替え
    - 他のパーツについてどうするか検討

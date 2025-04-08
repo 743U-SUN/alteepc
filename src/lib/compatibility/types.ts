@@ -1,55 +1,25 @@
 /**
  * 互換性チェックのための軽量型定義ファイル
- * パフォーマンス改善と将来の拡張性を考慮した設計
+ * 型定義は@/types/compatibilityに移動されました
  */
 import { CPU } from '../data/cpus';
 import { Motherboard } from '../data/motherboards';
+import { 
+  CompatibilityCPU, 
+  CompatibilityMotherboard, 
+  CompatibilityIssue,
+  CompatibilitySeverity,
+  CompatibilityBuildComponents
+} from '@/types/compatibility';
 
-// 互換性の問題の重要度
-export type CompatibilitySeverity = 'critical' | 'warning' | 'info';
-
-// 互換性の問題
-export interface CompatibilityIssue {
-  type: string;                   // 問題の種類（識別子）
-  severity: CompatibilitySeverity; // 深刻度
-  message: string;                // 表示メッセージ
-  components: string[];           // 関連コンポーネント
-}
-
-// CPU互換性チェック用の軽量インターフェース
-export interface CompatibilityCPU {
-  id: string;
-  manufacturer: string;    // エラーメッセージ用
-  model: string;           // エラーメッセージ用
-  socket: string;
-  supportedMemoryType: string[];
-  maxMemorySpeed: number;
-  tdp: number;
-}
-
-// マザーボード互換性チェック用の軽量インターフェース
-export interface CompatibilityMotherboard {
-  id: string;
-  manufacturer: string;    // エラーメッセージ用
-  model: string;           // エラーメッセージ用
-  socket: string;
-  chipset: string;
-  memoryType: string[];
-  maxMemorySpeed: number;
-}
-
-// PC構成のコンポーネントIDs
-export interface BuildComponents {
-  cpu: string | null;
-  motherboard: string | null;
-  memory: string[] | null;
-  gpu: string | null;
-  storage: string[] | null;
-  psu: string | null;
-  case: string | null;
-  cpuCooler: string | null;
-  fans: string[] | null;
-}
+// 型をリエクスポート
+export type { 
+  CompatibilityIssue, 
+  CompatibilitySeverity, 
+  CompatibilityBuildComponents as BuildComponents, 
+  CompatibilityCPU, 
+  CompatibilityMotherboard 
+};
 
 /**
  * 完全なCPUオブジェクトから互換性チェック用の軽量オブジェクトに変換する関数

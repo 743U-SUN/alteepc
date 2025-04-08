@@ -1,40 +1,16 @@
 import { createId } from '@paralleldrive/cuid2';
 import { PartsService } from './parts-service';
-import type { CompatibilityIssue } from '../lib/compatibility';
 import { generateBuildId } from '@/lib/url/build-url';
-
-// PC構成の型定義
-export interface PCBuildComponents {
-  cpu: string | null;
-  motherboard: string | null;
-  memory: string[] | null;
-  gpu: string | null;
-  storage: string[] | null;
-  psu: string | null;
-  case: string | null;
-  cpuCooler: string | null;
-  fans: string[] | null;
-}
-
-export interface PCBuild {
-  id: string;
-  components: PCBuildComponents;
-  compatibilityIssues: CompatibilityIssue[];
-  totalPrice: number;
-  name: string | null;
-  createdAt: Date;
-  lastAccessedAt: Date;
-  expiresAt: Date;
-  accessCount: number;
-}
+import { ServicePCBuild, PCBuildComponents, SavedBuildResult } from '@/types/service';
+import { CompatibilityIssue } from '@/types/compatibility';
 
 // シングルトンパターンでBuildServiceを実装
 // これにより、サーバー起動中はメモリ内にビルドデータが保持される
 let instance: BuildService | null = null;
 
 export class BuildService {
-  private builds: PCBuild[] = [];
-  private partsService: PartsService;
+  private builds: ServicePCBuild[] = [];
+  private partsService!: PartsService;
   
   constructor() {
     // シングルトンインスタンスの確認
@@ -53,12 +29,7 @@ export class BuildService {
   async saveBuild(buildData: {
     components: PCBuildComponents;
     name?: string;
-  }): Promise<{
-    id: string;
-    url: string;
-    createdAt: Date;
-    expiresAt: Date;
-  }> {
+  }): Promise<SavedBuildResult> {
     // 新しいbuildIdを生成
     const buildId = generateBuildId();
     const now = new Date();
@@ -72,7 +43,7 @@ export class BuildService {
     const totalPrice = await this.calculateTotalPrice(buildData.components);
     
     // 新しい構成データを作成
-    const newBuild: PCBuild = {
+    const newBuild: ServicePCBuild = {
       id: buildId,
       components: buildData.components,
       compatibilityIssues,
@@ -98,7 +69,7 @@ export class BuildService {
   }
   
   // PC構成の取得
-  async getBuild(buildId: string): Promise<PCBuild | null> {
+  async getBuild(buildId: string): Promise<ServicePCBuild | null> {
     console.log(`[BuildService] Getting build with ID: ${buildId}`);
     console.log(`[BuildService] Available builds: ${this.builds.length}`);
     
@@ -118,7 +89,7 @@ export class BuildService {
   }
   
   // すべてのPC構成を取得
-  async getAllBuilds(): Promise<PCBuild[]> {
+  async getAllBuilds(): Promise<ServicePCBuild[]> {
     return this.builds;
   }
   

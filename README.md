@@ -42,7 +42,7 @@ alteePC は自作PC初心者のためのパーツ互換性チェック＆簡易�
 - Next.js: v14.2.26
 - React: v18.3.1
 - TypeScript: v5.4.5
-- Prisma: v5.10.2
+- Prisma: v6.5.0
 - TailwindCSS: v3.4.17
 - PostgreSQL: v16.3.x
 - cuid2: v2 (npm install @paralleldrive/cuid2)

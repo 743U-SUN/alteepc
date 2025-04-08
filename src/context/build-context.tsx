@@ -1,32 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-
-// PCビルドコンポーネントの型定義
-type BuildComponents = {
-  cpu: string | null;
-  motherboard: string | null;
-  memory: string[] | null;
-  gpu: string | null;
-  storage: string[] | null;
-  psu: string | null;
-  case: string | null;
-  cpuCooler: string | null;
-  fans: string[] | null;
-};
-
-// 互換性問題の型定義
-type CompatibilityIssue = {
-  type: string;
-  severity: 'critical' | 'warning' | 'info';
-  message: string;
-  components: string[];
-};
-
-// PCビルド全体の型定義
-type PCBuild = {
-  components: BuildComponents;
-  compatibilityIssues: CompatibilityIssue[];
-  totalPrice: number;
-};
+import { BuildComponents, PCBuild, CompatibilityIssue } from '@/types/build';
 
 // コンテキストの型定義
 type BuildContextType = {

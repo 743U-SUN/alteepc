@@ -10,10 +10,18 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "prisma db seed",
+    "prisma:studio": "prisma studio --browser none --port 5555",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:up:dev": "docker-compose --profile dev up -d",
+    "docker:prisma:studio": "docker exec -it alteepc-dev npx prisma studio --port 5555",
+    "docker:prisma:migrate": "docker exec -it alteepc-dev npx prisma migrate dev",
+    "docker:prisma:seed": "docker exec -it alteepc-dev npx prisma db seed",
     "test:compatibility": "ts-node --skipProject src/lib/compatibility/test.ts"
   },
   "dependencies": {
     "@paralleldrive/cuid2": "^2.2.2",
+    "@prisma/client": "^6.5.0",
     "next": "14.2.26",
     "react": "18.3.1",
     "react-dom": "18.3.1"
@@ -26,8 +34,12 @@
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.26",
     "postcss": "^8.4.35",
+    "prisma": "^6.5.0",
     "tailwindcss": "^3.4.17",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }

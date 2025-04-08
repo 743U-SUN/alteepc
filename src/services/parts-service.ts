@@ -19,20 +19,16 @@ import type {
   PSU,
   Case,
   CPUCooler,
-  Fan 
-} from '../lib/data';
+  Fan,
+  FilterOptions,
+  SortOption
+} from '@/types/parts';
 
-// フィルターインターフェースの定義
-export interface FilterOptions {
-  [key: string]: any;
-}
 
-// ソートオプションの型定義
-export type SortOption = 'recommended' | 'price_asc' | 'price_desc' | string;
 
 export class PartsService {
   // CPUの取得
-  async getCPUs(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<CPU[]> {
+  async getCPUs(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<any[]> {
     let filteredCPUs = [...cpus];
     
     // フィルタリングロジック
@@ -88,12 +84,12 @@ export class PartsService {
   }
   
   // CPU詳細の取得
-  async getCPUById(id: string): Promise<CPU | null> {
+  async getCPUById(id: string): Promise<any | null> {
     return cpus.find(cpu => cpu.id === id) || null;
   }
   
   // マザーボードの取得
-  async getMotherboards(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<Motherboard[]> {
+  async getMotherboards(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<any[]> {
     let filteredMotherboards = [...motherboards];
     
     // フィルタリングロジック
@@ -152,12 +148,12 @@ export class PartsService {
   }
   
   // マザーボード詳細の取得
-  async getMotherboardById(id: string): Promise<Motherboard | null> {
+  async getMotherboardById(id: string): Promise<any | null> {
     return motherboards.find(mb => mb.id === id) || null;
   }
 
   // メモリの取得
-  async getMemories(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<Memory[]> {
+  async getMemories(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<any[]> {
     let filteredMemories = [...memories];
     
     // フィルタリングロジック
@@ -234,12 +230,12 @@ export class PartsService {
   }
   
   // メモリ詳細の取得
-  async getMemoryById(id: string): Promise<Memory | null> {
+  async getMemoryById(id: string): Promise<any | null> {
     return memories.find(mem => mem.id === id) || null;
   }
 
   // GPUの取得
-  async getGPUs(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<GPU[]> {
+  async getGPUs(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<any[]> {
     let filteredGPUs = [...gpus];
     
     // フィルタリングロジック
@@ -301,12 +297,12 @@ export class PartsService {
   }
   
   // GPU詳細の取得
-  async getGPUById(id: string): Promise<GPU | null> {
+  async getGPUById(id: string): Promise<any | null> {
     return gpus.find(gpu => gpu.id === id) || null;
   }
 
   // ストレージの取得
-  async getStorages(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<Storage[]> {
+  async getStorages(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<any[]> {
     let filteredStorages = [...storages];
     
     // フィルタリングロジック
@@ -377,12 +373,12 @@ export class PartsService {
   }
   
   // ストレージ詳細の取得
-  async getStorageById(id: string): Promise<Storage | null> {
+  async getStorageById(id: string): Promise<any | null> {
     return storages.find(storage => storage.id === id) || null;
   }
 
   // 電源ユニットの取得
-  async getPSUs(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<PSU[]> {
+  async getPSUs(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<any[]> {
     let filteredPSUs = [...psus];
     
     // フィルタリングロジック
@@ -456,12 +452,12 @@ export class PartsService {
   }
   
   // 電源ユニット詳細の取得
-  async getPSUById(id: string): Promise<PSU | null> {
+  async getPSUById(id: string): Promise<any | null> {
     return psus.find(psu => psu.id === id) || null;
   }
 
   // PCケースの取得
-  async getCases(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<Case[]> {
+  async getCases(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<any[]> {
     let filteredCases = [...cases];
     
     // フィルタリングロジック
@@ -534,12 +530,12 @@ export class PartsService {
   }
   
   // PCケース詳細の取得
-  async getCaseById(id: string): Promise<Case | null> {
+  async getCaseById(id: string): Promise<any | null> {
     return cases.find(pc => pc.id === id) || null;
   }
 
   // CPUクーラーの取得
-  async getCoolers(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<CPUCooler[]> {
+  async getCoolers(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<any[]> {
     let filteredCoolers = [...coolers];
     
     // フィルタリングロジック
@@ -616,12 +612,12 @@ export class PartsService {
   }
   
   // CPUクーラー詳細の取得
-  async getCoolerById(id: string): Promise<CPUCooler | null> {
+  async getCoolerById(id: string): Promise<any | null> {
     return coolers.find(cooler => cooler.id === id) || null;
   }
 
   // ファンの取得
-  async getFans(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<Fan[]> {
+  async getFans(filters: FilterOptions = {}, sortBy: SortOption = 'recommended'): Promise<any[]> {
     let filteredFans = [...fans];
     
     // フィルタリングロジック
@@ -692,7 +688,7 @@ export class PartsService {
   }
   
   // ファン詳細の取得
-  async getFanById(id: string): Promise<Fan | null> {
+  async getFanById(id: string): Promise<any | null> {
     return fans.find(fan => fan.id === id) || null;
   }
 }

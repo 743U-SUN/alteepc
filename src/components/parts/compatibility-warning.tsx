@@ -1,11 +1,5 @@
 import React from 'react';
-
-type CompatibilityIssue = {
-  type: string;
-  severity: 'critical' | 'warning' | 'info';
-  message: string;
-  components: string[];
-};
+import { CompatibilityIssue } from '@/types/compatibility';
 
 type CompatibilityWarningProps = {
   issues: CompatibilityIssue[];

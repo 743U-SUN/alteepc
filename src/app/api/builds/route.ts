@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { BuildService } from '@/services/build-service';
+import { ServiceFactory } from '@/services/service-factory';
 
 // ロガー関数
 function logToFile(message: string, data?: any) {
@@ -8,9 +8,8 @@ function logToFile(message: string, data?: any) {
   // 注: ここでファイルへのログ出力も実装できる
 }
 
-// BuildServiceのシングルトンインスタンス
-// メモリ内でビルドデータを保持するための単一インスタンス
-const buildService = new BuildService();
+// BuildServiceの取得
+const buildService = ServiceFactory.getBuildService();
 
 // PC構成を保存するAPIエンドポイント
 export async function POST(request: NextRequest) {

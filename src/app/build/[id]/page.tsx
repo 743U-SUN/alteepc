@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import type { PCBuild } from '@/services/build-service';
+import type { ServicePCBuild } from '@/types/service';
 import CompatibilityWarning from '@/components/parts/compatibility-warning';
 import Button from '@/components/ui/button';
 import { cpus } from '@/lib/data/cpus';
@@ -16,7 +16,7 @@ type Props = {
 export default function SharedBuildPage({ params }: Props) {
   const { id } = params;
   const router = useRouter();
-  const [build, setBuild] = useState<PCBuild | null>(null);
+  const [build, setBuild] = useState<ServicePCBuild | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

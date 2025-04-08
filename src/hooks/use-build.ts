@@ -1,10 +1,10 @@
 'use client';
 
-import { useBuildContext } from '@/context/build-context';
-import { PCBuild } from '@/models/build';
+import { useBuild as useBuildContext } from '@/context/build-context';
+import { BuildComponents, PCBuild } from '@/types/build';
 
 export function useBuild() {
-  const { currentBuild, updateBuild, updatePart, resetBuild } = useBuildContext();
+  const { currentBuild, updatePart, resetBuild } = useBuildContext();
   
   const hasParts = Object.values(currentBuild.components).some(value => {
     if (Array.isArray(value)) {
@@ -29,21 +29,20 @@ export function useBuild() {
     if (Array.isArray(part) && partId) {
       // 配列の場合は特定のアイテムを削除
       const updatedArray = part.filter(id => id !== partId);
-      updatePart(partType, null); // 一旦nullを設定
+      updatePart(partType as keyof BuildComponents, null); // 一旦nullを設定
       
       // 更新された配列を反映
       updatedArray.forEach(id => {
-        updatePart(partType, id);
+        updatePart(partType as keyof BuildComponents, id);
       });
     } else {
       // 単一値の場合は単純にnullを設定
-      updatePart(partType, null);
+      updatePart(partType as keyof BuildComponents, null);
     }
   };
   
   return {
     currentBuild,
-    updateBuild,
     updatePart,
     resetBuild,
     hasParts,

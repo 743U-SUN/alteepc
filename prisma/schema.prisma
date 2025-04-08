@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = []
 }
 
 datasource db {
@@ -159,7 +160,7 @@ model CurrentPrice {
   @@unique([motherboardId, shopId], name: "unique_motherboard_shop", map: "current_price_motherboard_shop_unique")
 
   // 各レコードでCPUかマザーボードのどちらか一方のみを参照するよう制約
-  @@check(((cpuId IS NOT NULL) AND (motherboardId IS NULL)) OR ((cpuId IS NULL) AND (motherboardId IS NOT NULL)))
+  // Prismaの制約としては実装できないため、アプリケーションコードで制約を実装する
 }
 
 // 価格履歴モデル
@@ -190,7 +191,7 @@ model PriceHistory {
   @@index([motherboardId, shopId, recordedAt])
   
   // 各レコードでCPUかマザーボードのどちらか一方のみを参照するよう制約
-  @@check(((cpuId IS NOT NULL) AND (motherboardId IS NULL)) OR ((cpuId IS NULL) AND (motherboardId IS NOT NULL)))
+  // Prismaの制約としては実装できないため、アプリケーションコードで制約を実装する
 }
 
 // PC構成モデル

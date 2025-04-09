@@ -22,7 +22,7 @@ const prisma = new PrismaClient();
  */
 
 // CSVファイルのパス（引数から取得するか、デフォルトを使用）
-const csvFilePath = process.argv[2] || './prisma/AlteePCデータ_CPU_sample.csv';
+const csvFilePath = process.argv[2] || './prisma/alteePC_cpu.csv';
 
 // 文字列を安全に数値に変換するヘルパー関数（無効な値はnullを返す）
 function safeParseInt(value: string | undefined): number | null {

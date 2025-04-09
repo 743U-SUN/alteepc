@@ -1,4 +1,4 @@
-FROM node:20-alpine AS base
+FROM node:22.14-alpine AS base
 
 # 依存関係のインストール
 FROM base AS deps
@@ -28,7 +28,7 @@ RUN npm run build
 FROM base AS runner
 WORKDIR /app
 
-ENV NODE_ENV production
+ENV NODE_ENV=production
 
 # 非ルートユーザーを作成して使用
 RUN addgroup --system --gid 1001 nodejs

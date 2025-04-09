@@ -1,0 +1,3 @@
+﻿name,manufacturer,model,socket,cores,threads,baseClock,boostClock,integratedGraphics,integratedGraphicsModel,supportedMemoryType,maxMemorySpeed,tdp,url,price,imageUrl,releaseDate
+Core i9-14900K,Intel,Core i9-14900K,LGA1700,24,32,3.2,6,Yes,Intel UHD Graphics 770,"DDR4, DDR5",5600,125,https://example.com/products/intel-i9-14900k,"￥69,800",/images/parts/cpu/intel_i9_14900k.jpg,2023年10月17日
+Ryzen 7 7800X3D,AMD,Ryzen 7 7800X3D,AM5,8,16,4.2,5,Yes,AMD Radeon Graphics,DDR5,5200,120,https://example.com/products/amd-ryzen-7-7800x3d,"￥48,800",/images/parts/cpu/amd_ryzen_7_7800x3d.jpg,2023年4月6日

@@ -23,11 +23,14 @@
     "@paralleldrive/cuid2": "^2.2.2",
     "@prisma/client": "^6.5.0",
     "next": "14.2.26",
+    "papaparse": "^5.5.2",
     "react": "18.3.1",
     "react-dom": "18.3.1"
   },
   "devDependencies": {
+    "@types/csv-parse": "^1.1.12",
     "@types/node": "^20.11.30",
+    "@types/papaparse": "^5.3.15",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
     "autoprefixer": "^10.4.18",

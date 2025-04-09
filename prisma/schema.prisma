@@ -25,6 +25,7 @@ model CPU {
   supportedMemoryType String[]       // "DDR4", "DDR5" など
   maxMemorySpeed      Int            // 最大メモリ速度 (MHz)
   integratedGraphics  String?        // 内蔵グラフィックスの名称（ない場合はnull）
+  integratedGraphicsModel String?  // 追加したフィールド（null許容）
   
   // メディア情報
   imageUrl            String?        // 製品画像URL
